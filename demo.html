@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Kitchen Safety System - Deluxe Edition</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <h2>SafeKitchen Pro</h2>
+                <p>Intelligent Safety System</p>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active" data-tab="dashboard-content"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="#" data-tab="history-content"><i class="fas fa-history"></i> History</a></li>
+                <li><a href="#" data-tab="analytics-content"><i class="fas fa-chart-line"></i> Analytics</a></li>
+            </ul>
+
+            <div class="system-status">
+                <div class="status-header">
+                    <h3>System Status</h3>
+                    <span id="system-time">00:00:00</span>
+                </div>
+                <div class="status-indicator">
+                    <span class="status-dot dot-green" id="status-dot"></span>
+                    <span id="system-status">System Active</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div id="dashboard-content">
+                <div class="header">
+                    <h1>Kitchen Safety Monitoring</h1>
+                    <div class="header-actions">
+                        <button class="btn btn-outline" id="refresh-btn">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-download"></i> Export Report
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="card sensors-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Sensor Readings</h2>
+                            <div class="card-icon">
+                                <i class="fas fa-thermometer-half"></i>
+                            </div>
+                        </div>
+
+                        <div class="sensor-item">
+                            <div class="sensor-header">
+                                <span class="sensor-name">Gas Level</span>
+                                <span class="sensor-value status-normal" id="gas-value">15%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="gas-level-bar" style="width: 15%; background-color: #3498db;"></div>
+                            </div>
+                            <div class="progress-info">
+                                <span>Safe Range: 0-40%</span>
+                                <span id="gas-status">Normal</span>
+                            </div>
+                        </div>
+
+                        <div class="sensor-item">
+                            <div class="sensor-header">
+                                <span class="sensor-name">Smoke Density</span>
+                                <span class="sensor-value status-normal" id="smoke-value">10%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="smoke-level-bar" style="width: 10%; background-color: #3498db;"></div>
+                            </div>
+                            <div class="progress-info">
+                                <span>Safe Range: 0-50%</span>
+                                <span id="smoke-status">Normal</span>
+                            </div>
+                        </div>
+
+                        <div class="sensor-item">
+                            <div class="sensor-header">
+                                <span class="sensor-name">Temperature</span>
+                                <span class="sensor-value status-normal" id="temp-value">25°C</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="temp-level-bar" style="width: 5%; background-color: #3498db;"></div>
+                            </div>
+                            <div class="progress-info">
+                                <span>Safe Range: 0-70°C</span>
+                                <span id="temp-status">Normal</span>
+                            </div>
+                        </div>
+
+                        <div class="sensor-item">
+                            <div class="sensor-header">
+                                <span class="sensor-name">Gas Valve Status</span>
+                                <span class="sensor-badge badge-success" id="valve-badge">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span id="valve-status">Open</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="auto-fix-container">
+                            <label class="auto-fix-switch">
+                                <input type="checkbox" id="auto-fix-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="auto-fix-label">Automatic Problem Handling</span>
+                            <span class="auto-fix-status">Enabled</span>
+                        </div>
+                    </div>
+
+                    <div class="card alerts-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Alert Center</h2>
+                            <div class="card-icon">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                        </div>
+
+                        <div class="alerts-list" id="dashboard-alerts-list">
+                            </div>
+                    </div>
+
+                    <div class="card camera-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Kitchen Surveillance</h2>
+                            <div class="card-icon">
+                                <i class="fas fa-video"></i>
+                            </div>
+                        </div>
+
+                        <div class="camera-feed">
+                            <img src="/api/placeholder/400/320" alt="Kitchen Camera Feed">
+                            <div class="camera-overlay">
+                                <div class="camera-header">
+                                    <div class="camera-label">
+                                        <i class="fas fa-video"></i>
+                                        <span>Main Kitchen</span>
+                                    </div>
+                                    <div class="camera-info">
+                                        <div class="camera-status">
+                                            <div class="camera-record"></div>
+                                            <span class="recording-label">REC</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="camera-controls">
+                            <button class="btn btn-outline" style="width: 100%;">
+                                <i class="fas fa-image"></i> View Snapshots
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card controls-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Safety Controls</h2>
+                            <div class="card-icon">
+                                <i class="fas fa-sliders-h"></i>
+                            </div>
+                        </div>
+
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <h3 class="control-title">Ventilation</h3>
+                                <div class="control-buttons">
+                                    <button class="control-button success-control" id="ventilation-on">
+                                        <i class="fas fa-fan"></i> Turn On
+                                    </button>
+                                    <button class="control-button danger-control" id="ventilation-off">
+                                        <i class="fas fa-power-off"></i> Turn Off
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <h3 class="control-title">Gas Valve</h3>
+                                <div class="control-buttons">
+                                    <button class="control-button primary-control" id="valve-open">
+                                        <i class="fas fa-lock-open"></i> Open Valve
+                                    </button>
+                                    <button class="control-button danger-control" id="valve-close">
+                                        <i class="fas fa-lock"></i> Close Valve
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <h3 class="control-title">Alarm System</h3>
+                                <div class="control-buttons">
+                                    <button class="control-button warning-control" id="alarm-silence">
+                                        <i class="fas fa-bell-slash"></i> Silence Alarm
+                                    </button>
+                                    <button class="control-button danger-control" id="reset-alarm">
+                                        <i class="fas fa-undo"></i> Reset Alarm
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <h3 class="control-title">Emergency Protocol</h3>
+                                <div class="control-buttons">
+                                    <button class="control-button danger-control" id="trigger-emergency">
+                                        <i class="fas fa-exclamation-triangle"></i> Trigger Alert
+                                    </button>
+                                    <button class="control-button info-control" id="contact-support">
+                                        <i class="fas fa-headset"></i> Contact Support
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <h3 class="control-title">Simulations</h3>
+                                <div class="control-buttons" style="display: flex; gap: 10px;">
+                                    <button class="control-button warning-control" id="btn-simulate-gas-leak" style="flex-grow: 1;">
+                                        <i class="fas fa-cloud-upload-alt"></i> Simulate Gas Leak
+                                    </button>
+                                    <button class="control-button warning-control" id="btn-simulate-high-temp" style="flex-grow: 1;">
+                                        <i class="fas fa-fire"></i> Simulate High Temp
+                                    </button>
+                                    <button class="control-button warning-control" id="btn-simulate-smoke" style="flex-grow: 1;">
+                                        <i class="fas fa-smog"></i> Simulate Smoke
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal" id="alert-modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="modal-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h2 class="modal-title">High Alert!</h2>
+                        </div>
+                        <div class="modal-body">
+                            <p class="modal-message" id="modal-message">Critical safety threshold exceeded. Taking automatic action.</p>
+                            <div class="fix-progress" id="fix-progress-steps">
+                                <div class="fix-step">
+                                    <span class="step-number">1</span>
+                                    <span class="step-description">Closing gas valve...</span>
+                                    <span class="step-status step-in-progress" id="step-1-status"></span>
+                                </div>
+                                <div class="fix-step">
+                                    <span class="step-number">2</span>
+                                    <span class="step-description">Activating ventilation system...</span>
+                                    <span class="step-status step-pending" id="step-2-status"></span>
+                                </div>
+                                <div class="fix-step">
+                                    <span class="step-number">3</span>
+                                    <span class="step-description">Sending emergency notification...</span>
+                                    <span class="step-status step-pending" id="step-3-status"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button class="btn btn-secondary" id="modal-close-btn">Acknowledge</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="history-content" style="display: none;">
+                <h2>History</h2>
+                <div class="card alerts-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Alert History</h2>
+                        <div class="card-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                    </div>
+                    <div class="alerts-list" id="history-alerts-list">
+                        </div>
+                </div>
+            </div>
+
+            <div id="analytics-content" style="display: none;">
+                <h2>Analytics</h2>
+                <div id="gasChart" style="height: 300px;"></div>
+                <div id="smokeChart" style="height: 300px;"></div>
+                <div id="tempChart" style="height: 300px;"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

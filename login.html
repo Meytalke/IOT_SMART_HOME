@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Kitchen IoT Login</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f9fc;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 450px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .header p {
+            color: #7f8c8d;
+            margin-top: 0;
+        }
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background-color: #f1f1f1;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .tab:first-child {
+            border-radius: 5px 0 0 5px;
+        }
+        .tab:last-child {
+            border-radius: 0 5px 5px 0;
+        }
+        .tab.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .hidden {
+            display: none;
+        }
+        .error-message {
+            color: #e74c3c;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Smart Kitchen IoT</h1>
+            <p>Login or register to manage your smart devices</p>
+        </div>
+        
+        <div class="card auth-card">
+            <div class="tabs">
+                <div class="tab active" id="login-tab">Login</div>
+                <div class="tab" id="register-tab">Register</div>
+            </div>
+            
+            <div id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="Enter your email">
+                    <div class="error-message" id="login-email-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter your password">
+                    <div class="error-message" id="login-password-error"></div>
+                </div>
+                <button id="login-btn">Login</button>
+                <div id="login-general-error" class="error-message"></div>
+            </div>
+            
+            <div id="register-form" class="hidden">
+                <div class="form-group">
+                    <label for="register-name">Full Name</label>
+                    <input type="text" id="register-name" placeholder="Enter your full name">
+                    <div class="error-message" id="register-name-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" placeholder="Enter your email">
+                    <div class="error-message" id="register-email-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" placeholder="Create a strong password (6+ characters)">
+                    <div class="error-message" id="register-password-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm">Confirm Password</label>
+                    <input type="password" id="register-confirm" placeholder="Confirm your password">
+                    <div class="error-message" id="register-confirm-error"></div>
+                </div>
+                <button id="register-btn">Register</button>
+                <div id="register-general-error" class="error-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Switch between login and register tabs
+        document.getElementById('login-tab').addEventListener('click', function () {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('register-form').classList.add('hidden');
+            document.getElementById('login-tab').classList.add('active');
+            document.getElementById('register-tab').classList.remove('active');
+            clearErrors();
+        });
+    
+        document.getElementById('register-tab').addEventListener('click', function () {
+            document.getElementById('register-form').classList.remove('hidden');
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('register-tab').classList.add('active');
+            document.getElementById('login-tab').classList.remove('active');
+            clearErrors();
+        });
+    
+        // Fake login - simulate successful login after validation
+        document.getElementById('login-btn').addEventListener('click', function () {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+    
+            clearErrors();
+    
+            let hasErrors = false;
+    
+            if (!email) {
+                document.getElementById('login-email-error').textContent = 'Please enter your email';
+                hasErrors = true;
+            }
+    
+            if (!password) {
+                document.getElementById('login-password-error').textContent = 'Please enter your password';
+                hasErrors = true;
+            }
+    
+            if (hasErrors) return;
+    
+            // Simulate login success
+            setTimeout(() => {
+                window.location.href = 'demo.html';
+            }, 500);
+        });
+    
+        // Fake registration - simulate successful registration after validation
+        document.getElementById('register-btn').addEventListener('click', function () {
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirm = document.getElementById('register-confirm').value;
+    
+            clearErrors();
+    
+            let hasErrors = false;
+    
+            if (!name) {
+                document.getElementById('register-name-error').textContent = 'Please enter your full name';
+                hasErrors = true;
+            }
+    
+            if (!email) {
+                document.getElementById('register-email-error').textContent = 'Please enter your email';
+                hasErrors = true;
+            }
+    
+            if (!password) {
+                document.getElementById('register-password-error').textContent = 'Please enter a password';
+                hasErrors = true;
+            } else if (password.length < 6) {
+                document.getElementById('register-password-error').textContent = 'Password must be at least 6 characters';
+                hasErrors = true;
+            }
+    
+            if (!confirm) {
+                document.getElementById('register-confirm-error').textContent = 'Please confirm your password';
+                hasErrors = true;
+            } else if (password !== confirm) {
+                document.getElementById('register-confirm-error').textContent = 'Passwords do not match';
+                hasErrors = true;
+            }
+    
+            if (hasErrors) return;
+    
+            // Simulate registration success
+            setTimeout(() => {
+                window.location.href = 'demo.html';
+            }, 500);
+        });
+    
+        // Clear error messages
+        function clearErrors() {
+            const errorElements = document.querySelectorAll('.error-message');
+            errorElements.forEach(function (element) {
+                element.textContent = '';
+            });
+        }
+    </script>
+    
+</body>
+</html>
