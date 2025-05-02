@@ -1,25 +1,20 @@
-import os
 import sys
-import PyQt5
 import random
-from PyQt5 import QtGui, QtCore, QtWidgets
+import datetime
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import paho.mqtt.client as mqtt
-import time
-import datetime
-from mqtt_init import * # הנח שיש כאן הגדרות ברוקר MQTT
-import sqlite3
-from sqlite3 import Error
-import pandas as pd
+from mqtt_init import * 
+from kitchen_monitor_db import create_connection, init_db, store_data, fetch_data
 
 # משתנים גלובליים
 global clientname, CONNECTED, DB_NAME
 CONNECTED = False
 r = random.randint(100000, 999999)
 clientname = "KitchenMonitor_client-" + str(r)
-DB_NAME = "kitchen_data.db"  # שם מסד נתונים יותר רלוונטי
+DB_NAME = "kitchen_data.db"
 
 # נושאי MQTT
 gas_sensor_topic = 'pr/home/5976397/gas'
@@ -40,10 +35,10 @@ class Mqtt_client():
         self.clientname = ''
         self.username = ''
         self.password = ''
-        self.subscribeTopics = []  # שינוי לרישום למספר נושאים
+        self.subscribeTopics = []  
         self.publishTopic = ''
         self.publishMessage = ''
-        self.on_message_from_broker = None  # שינוי שם לשיקוף טוב יותר של תפקידו
+        self.on_message_from_broker = None 
 
     # Setters and getters
     def set_on_message_from_broker(self, on_message_from_broker):
@@ -79,10 +74,10 @@ class Mqtt_client():
     def set_password(self, value):
         self.password = value
 
-    def get_subscribeTopics(self):  # לשקף את השינוי לרשימה
+    def get_subscribeTopics(self): 
         return self.subscribeTopics
 
-    def set_subscribeTopics(self, value):  # לשקף את השינוי לרשימה
+    def set_subscribeTopics(self, value):  
         self.subscribeTopics = value
 
     def get_publishTopic(self):
@@ -106,8 +101,8 @@ class Mqtt_client():
             print("connected OK")
             CONNECTED = True
             # לאחר ההתחברות, יש לרשום לנושאים
-            for topic in self.subscribeTopics:  # רישום למספר נושאים
-                client.subscribe(topic)  # שינוי: שימוש ב-client המקומי
+            for topic in self.subscribeTopics:  
+                client.subscribe(topic)  
             # Notify the form
             if self.on_message_from_broker:
                 self.on_message_from_broker("connected", "Connected to Broker")
@@ -127,7 +122,6 @@ class Mqtt_client():
         topic = msg.topic
         m_decode = str(msg.payload.decode("utf-8", "ignore"))
         print(f"message from:{topic} {m_decode}")
-        # העברת הטיפול בהודעה לפונקציה המתאימה ב-GUI
         if self.on_message_from_broker:
             self.on_message_from_broker(topic, m_decode)
 
@@ -171,7 +165,7 @@ class Mqtt_client():
             if self.on_message_from_broker:
                 self.on_message_from_broker("error", f"Error stopping listener: {e}")
 
-    def subscribe_to(self, topic):  # עדכון החתימה
+    def subscribe_to(self, topic): 
         if CONNECTED:
             try:
                 self.client.subscribe(topic)
@@ -194,92 +188,14 @@ class Mqtt_client():
             print("Can't publish. Connection should be established first")
 
 
-
-# --- Database Functions ---
-def create_connection(db_file):
-    """Create a database connection to the SQLite database specified by db_file."""
-    conn = None
-    try:
-        conn = sqlite3.connect(db_file)
-        print(f"{time_format()} Conected to version: {sqlite3.version}")
-        return conn
-    except Error as e:
-        print(f"{time_format()} {e}")
-    return conn
-
-
-def create_table(conn, create_table_sql):
-    """Create a table from the create_table_sql statement."""
-    try:
-        c = conn.cursor()
-        c.execute(create_table_sql)
-    except Error as e:
-        print(f"{time_format()} {e}")
-
-
-def init_db(database):
-    """Initialize the database with tables for kitchen monitoring data."""
-    tables = [
-        """ CREATE TABLE IF NOT EXISTS `kitchen_data` (
-            `id` INTEGER PRIMARY KEY AUTOINCREMENT,
-            `timestamp` TEXT NOT NULL,
-            `gas_level` REAL,
-            `smoke_level` REAL,
-            `temperature` REAL,
-            `warning` TEXT,
-            `alarm` TEXT
-        ); """
-    ]
-    conn = create_connection(database)
-    if conn is not None:
-        for table in tables:
-            create_table(conn, table)
-        conn.close()
-    else:
-        print(f"{time_format()} Error! cannot create the database connection.")
-
-
-
-def store_data(database, timestamp, gas_level, smoke_level, temperature, warning, alarm):
-    """Store sensor data, warnings, and alarms in the database."""
-    conn = create_connection(database)
-    if conn:
-        try:
-            sql = ''' INSERT INTO kitchen_data(timestamp, gas_level, smoke_level, temperature, warning, alarm)
-                      VALUES(?,?,?,?,?,?) '''
-            cur = conn.cursor()
-            cur.execute(sql, (timestamp, gas_level, smoke_level, temperature, warning, alarm))
-            conn.commit()
-            print(f"{time_format()} Data stored in database.")
-        except Error as e:
-            print(f"{time_format()} Error storing data: {e}")
-        finally:
-            conn.close()
-
-
-
-def fetch_data(database, table_name, start_time, end_time):
-    """Fetch data from the database within a specified time range."""
-    conn = create_connection(database)
-    try:
-        query = f"SELECT * FROM {table_name} WHERE timestamp BETWEEN ? AND ?"
-        df = pd.read_sql_query(query, conn, params=(start_time, end_time))
-        return df
-    except Error as e:
-        print(f"{time_format()} Error fetching data: {e}")
-        return pd.DataFrame()  # Return empty DataFrame on error
-    finally:
-        conn.close()
-
-
-
 # --- GUI Classes ---
 class ConnectionDock(QDockWidget):
     """Connection settings dock."""
 
-    def __init__(self, mc):
+    def __init__(self, mc, main_gui):
         QDockWidget.__init__(self)
         self.mc = mc
+        self.main_gui = main_gui
         self.mc.set_on_message_from_broker(self.on_message_from_broker)  # Receive messages
 
         self.eHostInput = QLineEdit(broker_ip)
@@ -328,53 +244,52 @@ class ConnectionDock(QDockWidget):
         if topic == gas_sensor_topic:
             try:
                 gas_level = float(message.split(":")[1].strip().replace('%', ''))
-                self.parent().main_gui.update_gas_level(gas_level)  # Call the method in main GUI
+                self.main_gui.update_gas_level(gas_level)  # Call the method in main GUI
                 # Generate warning/alarm and store to DB
                 warning, alarm = generate_warning_alarm(gas_level=gas_level)
                 store_data(DB_NAME, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), gas_level, None, None, warning, alarm)
                 if warning:
-                    self.parent().main_gui.add_warning(warning)
+                    self.main_gui.add_warning(warning)
                 if alarm:
-                    self.parent().main_gui.add_alarm(alarm)
+                    self.main_gui.add_alarm(alarm)
 
             except ValueError:
                 print(f"{time_format()} Invalid gas level format: {message}")
         elif topic == smoke_sensor_topic:
             try:
                 smoke_level = float(message.split(":")[1].strip())
-                self.parent().main_gui.update_smoke_level(smoke_level)
+                self.main_gui.update_smoke_level(smoke_level)
                 # Generate warning/alarm and store to DB
                 warning, alarm = generate_warning_alarm(smoke_level=smoke_level)
                 store_data(DB_NAME, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), None, smoke_level, None, warning, alarm)
                 if warning:
-                    self.parent().main_gui.add_warning(warning)
+                    self.main_gui.add_warning(warning)
                 if alarm:
-                    self.parent().main_gui.add_alarm(alarm)
+                    self.main_gui.add_alarm(alarm)
             except ValueError:
                 print(f"{time_format()} Invalid smoke level format: {message}")
         elif topic == temperature_sensor_topic:
             try:
                 temperature = float(message.split(":")[1].strip().replace('°C', ''))
-                self.parent().main_gui.update_temperature(temperature)
+                self.main_gui.update_temperature(temperature)
                 # Generate warning/alarm and store to DB
                 warning, alarm = generate_warning_alarm(temperature=temperature)
                 store_data(DB_NAME, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), None, None, temperature, warning, alarm)
                 if warning:
-                    self.parent().main_gui.add_warning(warning)
+                    self.main_gui.add_warning(warning)
                 if alarm:
-                    self.parent().main_gui.add_alarm(alarm)
+                    self.main_gui.add_alarm(alarm)
             except ValueError:
                 print(f"{time_format()} Invalid temperature format: {message}")
         elif topic == warning_topic:
-            self.parent().main_gui.add_warning(message)
+            self.main_gui.add_warning(message)
             store_data(DB_NAME, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), None, None, None, message, None)
         elif topic == alarm_topic:
-            self.parent().main_gui.add_alarm(message)
+            self.main_gui.add_alarm(message)
             store_data(DB_NAME, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), None, None, None, None, message)
 
     def on_connected(self):
         self.eConnectbtn.setStyleSheet("background-color: green")
-
 
 
 class DataDisplayDock(QDockWidget):
@@ -405,7 +320,6 @@ class DataDisplayDock(QDockWidget):
 
     def update_temperature(self, temp):
         self.temperature_label.setText(f"Temperature: {temp:.2f}")
-
 
 
 class StatusDock(QDockWidget):
@@ -447,9 +361,9 @@ class MainWindow(QMainWindow):
         self.setGeometry(30, 100, 800, 600)
         self.setWindowTitle('Kitchen Monitoring System')
 
-        self.connectionDock = ConnectionDock(self.mc)
         self.dataDisplayDock = DataDisplayDock()
         self.statusDock = StatusDock()
+        self.connectionDock = ConnectionDock(self.mc, self)
 
         self.setCentralWidget(QWidget())  # Placeholder for central widget
         self.addDockWidget(Qt.TopDockWidgetArea, self.connectionDock)
@@ -508,7 +422,6 @@ class MainWindow(QMainWindow):
         elif topic == alarm_topic:
             self.statusDock.add_alarm(message)
             store_data(DB_NAME, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), None, None, None, None, message)
-
 
 
     # Make the methods accessible.
